@@ -1,6 +1,6 @@
 FROM docker:latest
 
-RUN apk add --no-cache openssh
+RUN apk add --no-cache openssh bash
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
