@@ -42,7 +42,7 @@ fi
 
 # Create the remote command script with variables substituted
 cat > remote_cmd.sh <<EOF
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "🔐 Logging into Docker registry..."
@@ -70,6 +70,8 @@ docker run -d \\
 echo "✅ Container deployed successfully!"
 EOF
 
-# Execute the remote command script via SSH
+# Execute the remote command script via SSH with proper group context
 echo "🔗 Connecting to remote host and executing commands..."
-ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'bash -s' < remote_cmd.sh
+ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'newgrp docker << "DOCKERCMD"
+bash -s
+DOCKERCMD' < remote_cmd.sh
