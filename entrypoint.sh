@@ -40,13 +40,13 @@ if [ -n "${INPUT_ENV_VARS:-}" ]; then
   done
 fi
 
-# Create the remote command script
-cat > remote_cmd.sh <<'EOF'
+# Create the remote command script with variables substituted
+cat > remote_cmd.sh <<EOF
 #!/bin/sh
 set -e
 
 echo "🔐 Logging into Docker registry..."
-docker login "$REGISTRY" -u "$INPUT_DOCKER_USERNAME" -p "$INPUT_DOCKER_PASSWORD"
+echo "$INPUT_DOCKER_PASSWORD" | docker login "$REGISTRY" -u "$INPUT_DOCKER_USERNAME" --password-stdin
 
 echo "📥 Pulling Docker image..."
 docker pull "$INPUT_IMAGE:$TAG"
@@ -60,17 +60,16 @@ else
 fi
 
 echo "🚀 Running new container..."
-docker run -d \
-  --name "$INPUT_CONTAINER_NAME" \
-  $INPUT_DOCKER_PORTS \
-  $ENV_ARGS \
-  $INPUT_DOCKER_OPTIONS \
+docker run -d \\
+  --name "$INPUT_CONTAINER_NAME" \\
+  ${INPUT_DOCKER_PORTS:-} \\
+  ${ENV_ARGS:-} \\
+  ${INPUT_DOCKER_OPTIONS:-} \\
   "$INPUT_IMAGE:$TAG"
-EOF
 
-# Export necessary variables for the remote script
-export REGISTRY INPUT_DOCKER_USERNAME INPUT_DOCKER_PASSWORD INPUT_IMAGE TAG INPUT_CONTAINER_NAME INPUT_DOCKER_PORTS ENV_ARGS INPUT_DOCKER_OPTIONS
+echo "✅ Container deployed successfully!"
+EOF
 
 # Execute the remote command script via SSH
 echo "🔗 Connecting to remote host and executing commands..."
-ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'sh -s' < remote_cmd.sh
+ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'bash -s' < remote_cmd.sh
