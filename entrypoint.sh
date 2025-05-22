@@ -1,10 +1,15 @@
 #!/bin/sh
-
 set -eu
 
 # Decode SSH private key
 echo "$INPUT_PRIVATE_KEY" | base64 -d > id_rsa
 chmod 600 id_rsa
+
+# Validate key format early
+if ! ssh-keygen -y -f id_rsa > /dev/null 2>&1; then
+  echo "❌ Invalid SSH private key"
+  exit 1
+fi
 
 # Set defaults
 TAG="${INPUT_TAG:-latest}"
@@ -20,23 +25,39 @@ if [ -n "${INPUT_ENV_VARS}" ]; then
   done
 fi
 
-# Build remote command
-cat > remote_cmd.sh <<EOF
+# Write the remote command to a temporary file
+cat > remote_cmd.sh <<'EOF'
 set -e
 
 echo "🔐 Logging into Docker registry..."
-docker login \$REGISTRY -u \$INPUT_DOCKER_USERNAME -p \$INPUT_DOCKER_PASSWORD
+docker login "$REGISTRY" -u "$INPUT_DOCKER_USERNAME" -p "$INPUT_DOCKER_PASSWORD"
 
 echo "📥 Pulling Docker image..."
-docker pull \$INPUT_IMAGE:\$TAG
+docker pull "$INPUT_IMAGE:$TAG"
 
 echo "🛑 Stopping and removing existing container if it exists..."
-docker ps -q --filter "name=\$INPUT_CONTAINER_NAME" | grep -q . && \\
-docker stop \$INPUT_CONTAINER_NAME && docker rm \$INPUT_CONTAINER_NAME || echo "No existing container."
+docker ps -q --filter "name=$INPUT_CONTAINER_NAME" | grep -q . && \
+docker stop "$INPUT_CONTAINER_NAME" && docker rm "$INPUT_CONTAINER_NAME" || echo "No existing container."
 
 echo "🚀 Running new container..."
-docker run -d --name \$INPUT_CONTAINER_NAME \$INPUT_DOCKER_PORTS \$ENV_ARGS \$INPUT_DOCKER_OPTIONS \$INPUT_IMAGE:\$TAG
+docker run -d \
+  --name "$INPUT_CONTAINER_NAME" \
+  $INPUT_DOCKER_PORTS \
+  $ENV_ARGS \
+  $INPUT_DOCKER_OPTIONS \
+  "$INPUT_IMAGE:$TAG"
 EOF
 
-# SSH and run the composed command
-ssh -o StrictHostKeyChecking=no -i id_rsa "${INPUT_USERNAME}@${INPUT_HOST}" 'sh -s' < remote_cmd.sh
+# Copy environment variables into remote script
+sed -i "1i REGISTRY=$REGISTRY" remote_cmd.sh
+sed -i "1i INPUT_DOCKER_PASSWORD=$INPUT_DOCKER_PASSWORD" remote_cmd.sh
+sed -i "1i INPUT_DOCKER_USERNAME=$INPUT_DOCKER_USERNAME" remote_cmd.sh
+sed -i "1i INPUT_CONTAINER_NAME=$INPUT_CONTAINER_NAME" remote_cmd.sh
+sed -i "1i INPUT_IMAGE=$INPUT_IMAGE" remote_cmd.sh
+sed -i "1i TAG=$TAG" remote_cmd.sh
+sed -i "1i ENV_ARGS=$ENV_ARGS" remote_cmd.sh
+sed -i "1i INPUT_DOCKER_PORTS=$INPUT_DOCKER_PORTS" remote_cmd.sh
+sed -i "1i INPUT_DOCKER_OPTIONS=$INPUT_DOCKER_OPTIONS" remote_cmd.sh
+
+# SSH and run the script
+ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'sh -s' < remote_cmd.sh
