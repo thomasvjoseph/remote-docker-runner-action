@@ -20,7 +20,7 @@ REGISTRY="${INPUT_REGISTRY:-docker.io}"
 
 # Decode and save the SSH private key
 echo "🔐 Decoding SSH private key..."
-echo "$INPUT_PRIVATE_KEY" | base64 -d > id_rsa
+echo "$INPUT_PRIVATE_KEY" > id_rsa
 chmod 600 id_rsa
 
 if ! ssh-keygen -y -f id_rsa > /dev/null 2>&1; then
