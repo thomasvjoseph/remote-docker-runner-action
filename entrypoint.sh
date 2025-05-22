@@ -5,9 +5,11 @@ set -eu
 echo "$INPUT_PRIVATE_KEY" | base64 -d > id_rsa
 chmod 600 id_rsa
 
-# Validate key format early
+# Test decode
 if ! ssh-keygen -y -f id_rsa > /dev/null 2>&1; then
-  echo "❌ Invalid SSH private key"
+  echo "❌ Invalid SSH private key — likely corrupted or wrong format"
+  echo "First 10 lines of decoded key:"
+  head -n 10 id_rsa
   exit 1
 fi
 
