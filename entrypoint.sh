@@ -40,27 +40,27 @@ if [ -n "${INPUT_ENV_VARS:-}" ]; then
   done
 fi
 
-# Create the remote command script with variables substituted
+# Create the remote command script with sudo for docker commands
 cat > remote_cmd.sh <<EOF
 #!/bin/bash
 set -e
 
 echo "🔐 Logging into Docker registry..."
-echo "$INPUT_DOCKER_PASSWORD" | docker login "$REGISTRY" -u "$INPUT_DOCKER_USERNAME" --password-stdin
+echo "$INPUT_DOCKER_PASSWORD" | sudo docker login "$REGISTRY" -u "$INPUT_DOCKER_USERNAME" --password-stdin
 
 echo "📥 Pulling Docker image..."
-docker pull "$INPUT_IMAGE:$TAG"
+sudo docker pull "$INPUT_IMAGE:$TAG"
 
 echo "🛑 Stopping and removing existing container if it exists..."
-if docker ps -q --filter "name=$INPUT_CONTAINER_NAME" | grep -q .; then
-  docker stop "$INPUT_CONTAINER_NAME"
-  docker rm "$INPUT_CONTAINER_NAME"
+if sudo docker ps -q --filter "name=$INPUT_CONTAINER_NAME" | grep -q .; then
+  sudo docker stop "$INPUT_CONTAINER_NAME"
+  sudo docker rm "$INPUT_CONTAINER_NAME"
 else
   echo "No existing container named $INPUT_CONTAINER_NAME."
 fi
 
 echo "🚀 Running new container..."
-docker run -d \\
+sudo docker run -d \\
   --name "$INPUT_CONTAINER_NAME" \\
   ${INPUT_DOCKER_PORTS:-} \\
   ${ENV_ARGS:-} \\
@@ -70,8 +70,6 @@ docker run -d \\
 echo "✅ Container deployed successfully!"
 EOF
 
-# Execute the remote command script via SSH with proper group context
+# Execute the remote command script via SSH with login shell
 echo "🔗 Connecting to remote host and executing commands..."
-ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'newgrp docker << "DOCKERCMD"
-bash -s
-DOCKERCMD' < remote_cmd.sh
+ssh -o StrictHostKeyChecking=no -i id_rsa "$INPUT_USERNAME@$INPUT_HOST" 'bash -l -s' < remote_cmd.sh
