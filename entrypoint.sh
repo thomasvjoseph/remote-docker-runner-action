@@ -18,7 +18,8 @@ for pair in "${PAIRS[@]}"; do
 done
 
 # Compose Docker commands to run on the remote server
-read -r -d '' REMOTE_CMD <<EOF || true
+# Compose Docker commands to run on the remote server
+REMOTE_CMD=$(cat <<EOF
 set -e
 
 echo "🔐 Logging into Docker registry..."
@@ -34,6 +35,7 @@ docker stop ${INPUT_CONTAINER_NAME} && docker rm ${INPUT_CONTAINER_NAME} || echo
 echo "🚀 Running new container..."
 docker run -d --name ${INPUT_CONTAINER_NAME} ${INPUT_DOCKER_PORTS} ${ENV_ARGS} ${INPUT_DOCKER_OPTIONS} ${INPUT_IMAGE}:${TAG}
 EOF
+)
 
 # SSH and run the composed command
 ssh -o StrictHostKeyChecking=no -i id_rsa "${INPUT_USERNAME}@${INPUT_HOST}" "${REMOTE_CMD}"
