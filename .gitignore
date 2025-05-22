@@ -1,2 +1,10 @@
 .env
 test.sh
+.env.*
+id_rsa
+id_rsa.pub
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks

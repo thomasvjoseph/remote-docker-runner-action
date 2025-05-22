@@ -20,16 +20,15 @@ REGISTRY="${INPUT_REGISTRY:-docker.io}"
 
 # Decode and save the SSH private key
 echo "🔐 Decoding SSH private key..."
-echo "$INPUT_PRIVATE_KEY" | base64 -d > id_rsa 2>/dev/null || log_error "Failed to decode SSH private key. Ensure it's base64-encoded." 1
+echo "$INPUT_PRIVATE_KEY" | base64 -d > id_rsa
 chmod 600 id_rsa
 
-# Validate the SSH private key
 if ! ssh-keygen -y -f id_rsa > /dev/null 2>&1; then
-  echo "❌ Invalid SSH private key — likely corrupted or wrong format"
-  echo "First 10 lines of decoded key:"
-  head -n 10 id_rsa
+  echo "❌ Invalid SSH private key"
   exit 1
 fi
+
+echo "✅ Private key is valid!"
 
 # Parse environment variables into -e KEY=VAL format
 ENV_ARGS=""
