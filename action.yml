@@ -1,0 +1,64 @@
+# action.yml
+name: 'Remote Docker Runner'
+description: 'SSH into a remote server and run a Docker container with environment secrets.'
+branding:
+  icon: 'package'
+  color: 'blue'
+
+inputs:
+  host:
+    description: 'Remote server IP or DNS (e.g., 192.168.1.10 or example.com)'
+    required: true
+
+  username:
+    description: 'SSH username to connect with (e.g., ubuntu, ec2-user)'
+    required: true
+
+  private_key:
+    description: 'Base64-encoded private SSH key for secure remote login'
+    required: true
+
+  registry:
+    description: 'Docker registry URL (default: docker.io)'
+    required: false
+    default: 'docker.io'
+
+  image:
+    description: 'Full Docker image name (e.g., nginx, ghcr.io/user/repo)'
+    required: true
+
+  tag:
+    description: 'Docker image tag (default: latest)'
+    required: false
+    default: 'latest'
+
+  container_name:
+    description: 'Name for the Docker container'
+    required: true
+
+  docker_ports:
+    description: 'Port mappings (e.g., "-p 80:80 -p 443:443")'
+    required: false
+    default: ''
+
+  docker_options:
+    description: 'Extra Docker run options (e.g., "-v /data:/app/data")'
+    required: false
+    default: ''
+
+  env_vars:
+    description: 'Comma-separated list of environment variables (e.g., API_KEY=val,DB_PASS=val)'
+    required: false
+    default: ''
+
+  docker_username:
+    description: 'Username for Docker registry login'
+    required: true
+
+  docker_password:
+    description: 'Password for Docker registry login'
+    required: true
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
