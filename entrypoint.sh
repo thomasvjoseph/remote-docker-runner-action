@@ -30,11 +30,12 @@ fi
 
 echo "✅ Private key is valid!"
 
-# Parse environment variables into -e KEY=VAL format
+# Parse environment variables into -e KEY=VAL format (POSIX compatible)
 ENV_ARGS=""
 if [ -n "${INPUT_ENV_VARS:-}" ]; then
-  IFS=',' read -r -a env_pairs <<< "$INPUT_ENV_VARS"
-  for pair in "${env_pairs[@]}"; do
+  # Replace commas with spaces and iterate
+  env_list=$(echo "$INPUT_ENV_VARS" | tr ',' ' ')
+  for pair in $env_list; do
     ENV_ARGS="$ENV_ARGS -e $pair"
   done
 fi
