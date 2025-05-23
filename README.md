@@ -48,7 +48,7 @@ GitHub Action to SSH into a remote server and run Docker containers with environ
     env_vars: |
       - KEY=${{ vars.KEY }}
 
-
+```
 ⸻
 
 🛡️ Security

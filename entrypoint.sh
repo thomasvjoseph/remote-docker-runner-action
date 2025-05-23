@@ -52,7 +52,7 @@ echo "📥 Pulling Docker image..."
 sudo docker pull "$INPUT_IMAGE:$TAG"
 
 echo "🛑 Stopping and removing existing container if it exists..."
-if sudo docker ps -q --filter "name=$INPUT_CONTAINER_NAME" | grep -q .; then
+if sudo docker ps -aq --filter "name=$INPUT_CONTAINER_NAME" | grep -q .; then
   sudo docker stop "$INPUT_CONTAINER_NAME"
   sudo docker rm "$INPUT_CONTAINER_NAME"
 else

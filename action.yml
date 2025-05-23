@@ -1,8 +1,8 @@
 # action.yml
 name: 'Remote Docker Runner'
-description: 'SSH into a remote server and run a Docker container with environment secrets.'
+description: 'SSH into a remote server and run a Docker container with environment secrets (Secrets from Github Secrets).'
 branding:
-  icon: 'package'
+  icon: anchor
   color: 'blue'
 
 inputs:
