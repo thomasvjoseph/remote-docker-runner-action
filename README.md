@@ -34,19 +34,38 @@ GitHub Action to SSH into a remote server and run Docker containers with environ
 ### 🧪 Example
 
 ```yaml
-- name: Deploy to Remote Docker Host
-  uses: thomasvjoseph/ssh-docker@v1.0.0
-  with:
-    host: ${{ secrets.SSH_HOST }}
-    username: ${{ secrets.SSH_USER }}
-    private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-    image: thomasjiitak/learn
-    container_name: test-app
-    docker_username: ${{ secrets.DOCKER_USERNAME }}
-    docker_password: ${{ secrets.DOCKER_PASSWORD }}
-    docker_ports: "-p 80:80"
-    env_vars: |
-      - KEY=${{ vars.KEY }}
+
+name: Docker Image CI-CD dev
+on:
+  push:
+    branches: [ "main" ]
+env:
+  KEY: ${{ vars.KEY }}
+
+jobs:
+  build-push-docker:
+    runs-on: ubuntu-latest
+    environment: test
+    permissions:
+      issues: write
+      id-token: write
+      contents: read
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Deploy to Remote Docker Host
+          uses: thomasvjoseph/ssh-docker@v1.0.0
+          with:
+            host: ${{ secrets.SSH_HOST }}
+            username: ${{ secrets.SSH_USER }}
+            private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+            image: ubuntu/nginx
+            container_name: nginx
+            docker_username: ${{ secrets.DOCKER_USERNAME }}
+            docker_password: ${{ secrets.DOCKER_PASSWORD }}
+            docker_ports: "-p 80:80"
+            env_vars: |
+            - KEY=${{ vars.KEY }}
 
 ```
 ⸻
